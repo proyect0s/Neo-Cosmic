@@ -1,0 +1,1287 @@
+###
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diseñador Avanzado de Hábitats Espaciales - NASA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2a2f4a 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #4da6ff, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .mode-btn {
+            padding: 8px 20px;
+            background: rgba(77, 166, 255, 0.2);
+            border: 2px solid #4da6ff;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            background: #4da6ff;
+            transform: scale(1.05);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section h3 {
+            color: #4da6ff;
+            margin-bottom: 12px;
+            font-size: 1em;
+            border-bottom: 2px solid rgba(77, 166, 255, 0.3);
+            padding-bottom: 6px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #b0c4de;
+            font-size: 0.85em;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #4da6ff, #357abd);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(77, 166, 255, 0.4);
+        }
+
+        .canvas-container {
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        #viewport3d {
+            width: 100%;
+            height: 600px;
+            border-radius: 8px;
+            cursor: grab;
+        }
+
+        #viewport3d:active {
+            cursor: grabbing;
+        }
+
+        .controls-hint {
+            text-align: center;
+            margin-top: 8px;
+            color: #b0c4de;
+            font-size: 0.85em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #4da6ff;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: #b0c4de;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #4da6ff;
+        }
+
+        .areas-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .area-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 3px solid;
+            font-size: 0.85em;
+        }
+
+        .area-item.valid {
+            border-left-color: #4ade80;
+        }
+
+        .area-item.invalid {
+            border-left-color: #ef4444;
+        }
+
+        .delete-btn {
+            width: auto;
+            padding: 4px 8px;
+            background: #ef4444;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .object-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .object-btn {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.2s;
+            margin: 0;
+        }
+
+        .object-btn:hover {
+            background: rgba(77, 166, 255, 0.3);
+            border-color: #4da6ff;
+        }
+
+        .recommendation-item {
+            background: rgba(251, 191, 36, 0.1);
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            border-left: 2px solid #fbbf24;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .switch.active {
+            background: #4da6ff;
+        }
+
+        .switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+        }
+
+        .switch.active::after {
+            left: 22px;
+        }
+
+        .export-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(77, 166, 255, 0.5);
+            border-radius: 3px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Diseñador Avanzado de hábitats espaciales NASA (NEO-COSMIC)</h1>
+            <p style="font-size: 0.9em;">Herramienta profesional para diseño de hábitats lunares y marciales</p>
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="setMode('basic', event)">🎓 Modo Estudiante</button>
+                <button class="mode-btn" onclick="setMode('advanced', event)">🔬 Modo PRO</button>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <!-- Panel Izquierdo -->
+            <div class="panel">
+                <div class="section">
+                    <h3> Configuracion del hábitat</h3>
+                    
+                    <label>Forma del Hábitat</label>
+                    <select id="habitatShape" onchange="createHabitat()">
+                        <option value="cylinder">Cilindro</option>
+                        <option value="sphere">Esfera</option>
+                        <option value="cube">Cubo Modular</option>
+                    </select>
+
+                    <label>Ancho (m)</label>
+                    <input type="number" id="width" value="10" min="3" max="30" step="0.5" onchange="createHabitat()">
+
+                    <label>Alto (m)</label>
+                    <input type="number" id="height" value="8" min="2" max="20" step="0.5" onchange="createHabitat()">
+
+                    <label>Profundidad (m)</label>
+                    <input type="number" id="depth" value="10" min="3" max="30" step="0.5" onchange="createHabitat()">
+
+                    <div class="toggle-switch">
+                        <div class="switch" id="multiLevelSwitch" onclick="toggleMultiLevel()"></div>
+                        <label style="margin: 0;">Múltiples Niveles</label>
+                    </div>
+
+                    <div id="levelControls" style="display: none;">
+                        <label>Número de Niveles</label>
+                        <input type="number" id="numLevels" value="2" min="1" max="4" onchange="createHabitat()">
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3> Parámetros de mision</h3>
+                    
+                    <label>Tamaño de Tripulación</label>
+                    <input type="number" id="crewSize" value="4" min="1" max="12" onchange="updateStats()">
+
+                    <label>Duración (días)</label>
+                    <input type="number" id="duration" value="30" min="1" max="1000" onchange="updateStats()">
+
+                    <label>Destino</label>
+                    <select id="destination" onchange="updateRecommendations()">
+                        <option value="moon">Luna (1/6 g)</option>
+                        <option value="mars">Marte (1/3 g)</option>
+                        <option value="orbit">Órbita (0 g)</option>
+                    </select>
+                </div>
+
+                <div class="section">
+                    <h3> Áreas funcionales</h3>
+                    
+                    <label>Tipo de Área</label>
+                    <select id="areaType">
+                        <option value="sleep">🛏️ Descanso/Sueño</option>
+                        <option value="food">🍽️ Alimentos</option>
+                        <option value="hygiene">🚿 Higiene</option>
+                        <option value="exercise">🏃 Ejercicio</option>
+                        <option value="work">🔬 Trabajo/Investigación</option>
+                        <option value="storage">📦 Almacenamiento</option>
+                        <option value="medical">⚕️ Medico</option>
+                        <option value="recreation">🎮 Recreación</option>
+                    </select>
+
+                    <label>Porcentaje (%)</label>
+                    <input type="number" id="areaPercentage" value="15" min="5" max="50" step="5">
+
+                    <div class="toggle-switch">
+                        <div class="switch" id="autoZoneSwitch" onclick="toggleAutoZone()"></div>
+                        <label style="margin: 0;">Auto-Zonificación NASA</label>
+                    </div>
+
+                    <button onclick="addArea()">➕ Agregar area</button>
+                    <button onclick="autoDistribute()" style="background: linear-gradient(135deg, #34d399, #059669);">🤖 Distribución Automática</button>
+                    <button onclick="clearAll()" style="background: linear-gradient(135deg, #ef4444, #dc2626);">🗑️ Limpiar Todo</button>
+                </div>
+
+                <div class="section">
+                    <h3> Áreas definidas</h3>
+                    <div id="areasList" class="areas-list"></div>
+                </div>
+            </div>
+
+            <!-- Panel Central -->
+            <div>
+                <div class="canvas-container">
+                    <div id="viewport3d"></div>
+                    <div class="controls-hint">
+                        🖱️ Arrastra para rotar | Rueda para zoom
+                    </div>
+                </div>
+
+                <div class="panel stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Volumen total</div>
+                        <div class="stat-value" id="totalVolume">800 m³</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Área superficie</div>
+                        <div class="stat-value" id="surfaceArea">400 m²</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Espacio/Tripulante</div>
+                        <div class="stat-value" id="spacePerCrew">200 m³</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Espacio asignado</div>
+                        <div class="stat-value" id="assignedSpace">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Estado general</div>
+                        <div class="stat-value" id="habitatStatus" style="font-size: 0.9em;">⚠️ Sin configurar</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Objetos sgregados</div>
+                        <div class="stat-value" id="objectCount">0</div>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top: 15px;">
+                    <div class="export-buttons">
+                        <button onclick="exportDesign()">💾 Guardar diseño</button>
+                        <button onclick="importDesign()">📂 Cargar diseño</button>
+                        <button onclick="takeScreenshot()">📸 Captura 3D</button>
+                        <button onclick="generateReport()">📄 Ver reporte</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Derecho -->
+            <div class="panel">
+                <div class="section">
+                    <h3> Objetos del hábitat</h3>
+                    <div class="object-grid">
+                        <button class="object-btn" onclick="addObject('astronaut')">👨‍🚀 Astronauta</button>
+                        <button class="object-btn" onclick="addObject('spacesuit')">🧑‍🚀 Traje</button>
+                        <button class="object-btn" onclick="addObject('storage')">📦 Caja</button>
+                        <button class="object-btn" onclick="addObject('bed')">🛏️ Cama</button>
+                        <button class="object-btn" onclick="addObject('computer')">💻 PC</button>
+                        <button class="object-btn" onclick="addObject('plant')">🌱 Planta</button>
+                        <button class="object-btn" onclick="addObject('medical')">⚕️ Médico</button>
+                        <button class="object-btn" onclick="addObject('equipment')">🔧 Equipo</button>
+                    </div>
+                    <button onclick="clearObjects()" style="background: #ef4444; margin-top: 10px;">Limpiar Objetos</button>
+                </div>
+
+                <div class="section">
+                    <h3>Recomendaciones NASA</h3>
+                    <div id="recommendations" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+
+                <div class="section">
+                    <h3> Analisis de zonificación</h3>
+                    <div id="zoningAnalysis" style="font-size: 0.85em; color: #b0c4de;"></div>
+                </div>
+
+                <div class="section">
+                    <h3> Guia rápida</h3>
+                    <div style="font-size: 0.8em; color: #b0c4de; line-height: 1.5;">
+                        <p><strong>Estudiantes:</strong> Experimenta con diferentes formas y tamaños.</p>
+                        <p style="margin-top: 8px;"><strong>Profesionales:</strong> Usa auto-zonificación para estándares NASA.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer, habitat, areaMeshes = [], objectMeshes = [];
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let currentMode = 'basic';
+        let multiLevel = false;
+        let autoZone = false;
+        let areas = [];
+        let objectCount = 0;
+
+        const viewport = document.getElementById('viewport3d');
+
+        const minRequirements = {
+            sleep: 5,
+            food: 3,
+            hygiene: 2,
+            exercise: 4,
+            work: 6,
+            storage: 3,
+            medical: 4,
+            recreation: 3
+        };
+
+        const zoningRules = {
+            sleep: { adjacent: ['hygiene'], avoid: ['exercise', 'work'], noise: 'bajo' },
+            food: { adjacent: ['hygiene', 'storage'], avoid: ['medical', 'exercise'], noise: 'medio' },
+            hygiene: { adjacent: ['sleep'], avoid: ['food', 'work'], noise: 'bajo' },
+            exercise: { adjacent: ['medical'], avoid: ['sleep', 'food'], noise: 'alto' },
+            work: { adjacent: ['storage'], avoid: ['sleep', 'exercise'], noise: 'medio' },
+            storage: { adjacent: ['food', 'work'], avoid: [], noise: 'bajo' },
+            medical: { adjacent: ['exercise'], avoid: ['food'], noise: 'bajo' },
+            recreation: { adjacent: ['sleep'], avoid: ['work'], noise: 'medio' }
+        };
+
+        const areaColors = {
+            sleep: 0x60a5fa,
+            food: 0x34d399,
+            hygiene: 0xfbbf24,
+            exercise: 0xf87171,
+            work: 0xa78bfa,
+            storage: 0xfb923c,
+            medical: 0xec4899,
+            recreation: 0x14b8a6
+        };
+
+        const areaNames = {
+            sleep: 'Descanso/Sueño',
+            food: 'Alimentos',
+            hygiene: 'Higiene',
+            exercise: 'Ejercicio',
+            work: 'Trabajo/Investigación',
+            storage: 'Almacenamiento',
+            medical: 'Médico',
+            recreation: 'Recreación'
+        };
+
+        // Inicializar la aplicación cuando se carga la página
+        window.addEventListener('DOMContentLoaded', () => {
+            initThreeJS();
+            updateStats();
+            updateRecommendations();
+            updateZoningAnalysis();
+
+        });
+
+        function setMode(mode, event) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateRecommendations();
+        }
+
+        function toggleMultiLevel() {
+            multiLevel = !multiLevel;
+            document.getElementById('multiLevelSwitch').classList.toggle('active');
+            document.getElementById('levelControls').style.display = multiLevel ? 'block' : 'none';
+            createHabitat();
+        }
+
+        function toggleAutoZone() {
+            autoZone = !autoZone;
+            document.getElementById('autoZoneSwitch').classList.toggle('active');
+            updateRecommendations();
+        }
+
+        function initThreeJS() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0e27);
+
+            camera = new THREE.PerspectiveCamera(75, viewport.clientWidth / viewport.clientHeight, 0.1, 1000);
+            camera.position.set(15, 10, 15);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+            renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+            viewport.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 10);
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0x4da6ff, 0.5);
+            pointLight.position.set(-10, 5, -10);
+            scene.add(pointLight);
+
+            const gridHelper = new THREE.GridHelper(30, 30, 0x4da6ff, 0x2a2f4a);
+            scene.add(gridHelper);
+
+            viewport.addEventListener('mousedown', onMouseDown);
+            viewport.addEventListener('mousemove', onMouseMove);
+            viewport.addEventListener('mouseup', onMouseUp);
+            viewport.addEventListener('wheel', onMouseWheel);
+
+            createHabitat();
+            animate();
+        }
+
+        function onMouseDown(e) {
+            isDragging = true;
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        }
+
+        function onMouseMove(e) {
+            if (isDragging && habitat) {
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+                habitat.rotation.y += deltaX * 0.01;
+                habitat.rotation.x += deltaY * 0.01;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            }
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+        }
+
+        function onMouseWheel(e) {
+            e.preventDefault();
+            camera.position.z += e.deltaY * 0.01;
+            camera.position.z = Math.max(5, Math.min(50, camera.position.z));
+        }
+
+        function createHabitat() {
+            if (habitat) scene.remove(habitat);
+
+            habitat = new THREE.Group();
+            const shape = document.getElementById('habitatShape').value;
+            const w = parseFloat(document.getElementById('width').value);
+            const h = parseFloat(document.getElementById('height').value);
+            const d = parseFloat(document.getElementById('depth').value);
+
+            let geometry;
+            
+            if (shape === 'cylinder') {
+                geometry = new THREE.CylinderGeometry(w / 2, w / 2, h, 32);
+            } else if (shape === 'sphere') {
+                geometry = new THREE.SphereGeometry(w / 2, 32, 32);
+            } else {
+                geometry = new THREE.BoxGeometry(w, h, d);
+            }
+
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x4da6ff,
+                transparent: true,
+                opacity: 0.25,
+                side: THREE.DoubleSide
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            habitat.add(mesh);
+
+            const edges = new THREE.EdgesGeometry(geometry);
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x4da6ff }));
+            habitat.add(line);
+
+            if (multiLevel) {
+                const levels = parseInt(document.getElementById('numLevels').value) || 2;
+                const levelHeight = h / levels;
+                for (let i = 1; i < levels; i++) {
+                    const y = -h/2 + i * levelHeight;
+                    const levelGeom = shape === 'cube' ? 
+                        new THREE.PlaneGeometry(w, d) : 
+                        new THREE.CircleGeometry(w/2, 32);
+                    const levelMat = new THREE.MeshBasicMaterial({
+                        color: 0x4da6ff,
+                        transparent: true,
+                        opacity: 0.2,
+                        side: THREE.DoubleSide
+                    });
+                    const levelMesh = new THREE.Mesh(levelGeom, levelMat);
+                    levelMesh.rotation.x = -Math.PI / 2;
+                    levelMesh.position.y = y;
+                    habitat.add(levelMesh);
+                }
+            }
+
+            scene.add(habitat);
+            createAreaSections();
+            updateStats();
+        }
+
+        function createAreaSections() {
+            areaMeshes.forEach(mesh => habitat.remove(mesh));
+            areaMeshes = [];
+
+            if (areas.length === 0) return;
+
+            const shape = document.getElementById('habitatShape').value;
+            const w = parseFloat(document.getElementById('width').value);
+            const h = parseFloat(document.getElementById('height').value);
+            const d = parseFloat(document.getElementById('depth').value);
+
+            let currentAngle = 0;
+
+            areas.forEach(area => {
+                const angle = (area.percentage / 100) * Math.PI * 2;
+                let geometry;
+                
+                if (shape === 'cylinder') {
+                    geometry = new THREE.CylinderGeometry(
+                        w / 2 - 0.1, w / 2 - 0.1, h - 0.2, 32, 1, false, currentAngle, angle
+                    );
+                } else if (shape === 'sphere') {
+                    geometry = new THREE.SphereGeometry(
+                        w / 2 - 0.1, 16, 16, currentAngle, angle
+                    );
+                } else {
+                    const sectionWidth = (w * area.percentage) / 100;
+                    const offsetX = -w / 2 + (currentAngle / (Math.PI * 2)) * w + sectionWidth / 2;
+                    geometry = new THREE.BoxGeometry(sectionWidth - 0.1, h - 0.2, d - 0.2);
+                    
+                    const material = new THREE.MeshPhongMaterial({
+                        color: areaColors[area.type],
+                        transparent: true,
+                        opacity: 0.7
+                    });
+                    
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.position.x = offsetX;
+                    habitat.add(mesh);
+                    areaMeshes.push(mesh);
+                    
+                    currentAngle += angle;
+                    return;
+                }
+
+                const material = new THREE.MeshPhongMaterial({
+                    color: areaColors[area.type],
+                    transparent: true,
+                    opacity: 0.7
+                });
+
+                const mesh = new THREE.Mesh(geometry, material);
+                habitat.add(mesh);
+                areaMeshes.push(mesh);
+
+                currentAngle += angle;
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (habitat && !isDragging) {
+                habitat.rotation.y += 0.002;
+            }
+            renderer.render(scene, camera);
+        }
+
+        function calculateVolume() {
+            const shape = document.getElementById('habitatShape').value;
+            const w = parseFloat(document.getElementById('width').value);
+            const h = parseFloat(document.getElementById('height').value);
+            const d = parseFloat(document.getElementById('depth').value);
+            
+            let volume = 0, surfaceArea = 0;
+
+            if (shape === 'cylinder') {
+                const r = w / 2;
+                volume = Math.PI * r * r * h;
+                surfaceArea = 2 * Math.PI * r * (r + h);
+            } else if (shape === 'sphere') {
+                const radius = w / 2;
+                volume = (4/3) * Math.PI * Math.pow(radius, 3);
+                surfaceArea = 4 * Math.PI * Math.pow(radius, 2);
+            } else {
+                volume = w * h * d;
+                surfaceArea = 2 * (w * h + w * d + h * d);
+            }
+
+            return { volume, surfaceArea };
+        }
+
+        function updateStats() {
+            const { volume, surfaceArea } = calculateVolume();
+            const crewSize = parseInt(document.getElementById('crewSize').value);
+            const totalAssigned = areas.reduce((sum, area) => sum + area.percentage, 0);
+            
+            document.getElementById('totalVolume').textContent = volume.toFixed(1) + ' m³';
+            document.getElementById('surfaceArea').textContent = surfaceArea.toFixed(1) + ' m²';
+            document.getElementById('spacePerCrew').textContent = (volume / crewSize).toFixed(1) + ' m³';
+            document.getElementById('assignedSpace').textContent = totalAssigned.toFixed(0) + '%';
+            document.getElementById('objectCount').textContent = objectCount;
+            
+            // Actualizar estado del hábitat
+            let status = '⚠️ Sin configurar :(';
+            let statusColor = '#fbbf24';
+            
+            if (totalAssigned >= 80) {
+                status = '✅ Optimo:)';
+                statusColor = '#4ade80';
+            } else if (totalAssigned >= 50) {
+                status = '🟡 Aceptable';
+                statusColor = '#fbbf24';
+            } else if (totalAssigned > 0) {
+                status = '🔴 Insuficiente>:(';
+                statusColor = '#ef4444';
+            }
+            
+            document.getElementById('habitatStatus').textContent = status;
+            document.getElementById('habitatStatus').style.color = statusColor;
+        }
+
+        function addArea() {
+            const type = document.getElementById('areaType').value;
+            const percentage = parseInt(document.getElementById('areaPercentage').value);
+            
+            const totalAssigned = areas.reduce((sum, area) => sum + area.percentage, 0);
+            
+            if (totalAssigned + percentage > 100) {
+                alert('Error: El porcentaje total no puede exceder el 100%');
+                return;
+            }
+            
+            areas.push({ type, percentage });
+            updateAreasList();
+            createAreaSections();
+            updateStats();
+            updateRecommendations();
+            updateZoningAnalysis();
+        }
+
+        function updateAreasList() {
+            const areasList = document.getElementById('areasList');
+            areasList.innerHTML = '';
+            
+            areas.forEach((area, index) => {
+                const areaItem = document.createElement('div');
+                areaItem.className = 'area-item valid';
+                areaItem.innerHTML = `
+                    <strong>${areaNames[area.type]}</strong><br>
+                    <span>${area.percentage}% del espacio</span><br>
+                    <button class="delete-btn" onclick="removeArea(${index})">Eliminar</button>
+                `;
+                areasList.appendChild(areaItem);
+            });
+        }
+
+        function removeArea(index) {
+            areas.splice(index, 1);
+            updateAreasList();
+            createAreaSections();
+            updateStats();
+            updateRecommendations();
+            updateZoningAnalysis();
+
+        }
+
+        function autoDistribute() {
+            const crewSize = parseInt(document.getElementById('crewSize').value);
+            const duration = parseInt(document.getElementById('duration').value);
+            
+            // Distribución automática basada en estándares NASA
+            areas = [
+                { type: 'sleep', percentage: 20 },
+                { type: 'work', percentage: 25 },
+                { type: 'food', percentage: 15 },
+                { type: 'hygiene', percentage: 10 },
+                { type: 'exercise', percentage: 10 },
+                { type: 'recreation', percentage: 10 },
+                { type: 'medical', percentage: 5 },
+                { type: 'storage', percentage: 5 }
+            ];
+            
+            updateAreasList();
+            createAreaSections();
+            updateStats();
+            updateRecommendations();
+            updateZoningAnalysis();
+
+        }
+
+        function clearAll() {
+            areas = [];
+            updateAreasList();
+            createAreaSections();
+            updateStats();
+            updateRecommendations();
+            updateZoningAnalysis();
+
+        }
+
+        function updateRecommendations() {
+            const recommendations = document.getElementById('recommendations');
+            recommendations.innerHTML = '';
+            
+            const crewSize = parseInt(document.getElementById('crewSize').value);
+            const destination = document.getElementById('destination').value;
+            const totalAssigned = areas.reduce((sum, area) => sum + area.percentage, 0);
+            
+            // Generar recomendaciones basadas en el modo y configuración
+            if (currentMode === 'basic') {
+                if (totalAssigned < 50) {
+                    addRecommendation('Agrega más áreas funcionales para cubrir las necesidades básicas de la tripulación');
+                }
+                
+                if (crewSize > 6) {
+                    addRecommendation('Considera aumentar el tamaño del hábitat para tripulaciones grandes');
+                }
+                
+                if (!areas.some(area => area.type === 'sleep')) {
+                    addRecommendation('Incluye un área de descanso para la tripulación');
+                }
+                
+                if (!areas.some(area => area.type === 'food')) {
+                    addRecommendation('Agrega un área de preparación y consumo de alimentos');
+                }
+            } else {
+                // Modo profesional - recomendaciones más avanzadas
+                if (totalAssigned < 80) {
+                    addRecommendation('Optimiza la distribución para alcanzar al menos el 80% de uso del espacio');
+                }
+                
+                if (destination === 'mars') {
+                    addRecommendation('Considera protección adicional contra radiación para misiones marcianas');
+                }
+                
+                if (destination === 'orbit') {
+                    addRecommendation('Implementa sistemas de anclaje para condiciones de microgravedad');
+                }
+                
+                // Verificar áreas críticas
+                const criticalAreas = ['sleep', 'food', 'hygiene', 'medical'];
+                criticalAreas.forEach(areaType => {
+                    if (!areas.some(area => area.type === areaType)) {
+                        addRecommendation(`Área crítica faltante: ${areaNames[areaType]}`);
+                    }
+                });
+            }
+            
+            function addRecommendation(text) {
+                const item = document.createElement('div');
+                item.className = 'recommendation-item';
+                item.textContent = text;
+                recommendations
+                recommendations.appendChild(item);
+            }
+        }
+
+        function addObject(type) {
+            const geometry = new THREE.SphereGeometry(0.3, 8, 8);
+            let color;
+            
+            switch(type) {
+                case 'astronaut':
+                    color = 0xffffff;
+                    break;
+                case 'spacesuit':
+                    color = 0x4da6ff;
+                    break;
+                case 'storage':
+                    color = 0xfb923c;
+                    break;
+                case 'bed':
+                    color = 0x60a5fa;
+                    break;
+                case 'computer':
+                    color = 0x34d399;
+                    break;
+                case 'plant':
+                    color = 0x22c55e;
+                    break;
+                case 'medical':
+                    color = 0xec4899;
+                    break;
+                case 'equipment':
+                    color = 0xa78bfa;
+                    break;
+                default:
+                    color = 0xffffff;
+            }
+            
+            const material = new THREE.MeshPhongMaterial({ color });
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            // Posición aleatoria dentro del hábitat
+            const w = parseFloat(document.getElementById('width').value) / 2 - 0.5;
+            const h = parseFloat(document.getElementById('height').value) / 2 - 0.5;
+            const d = parseFloat(document.getElementById('depth').value) / 2 - 0.5;
+            
+            mesh.position.set(
+                (Math.random() - 0.5) * w,
+                (Math.random() - 0.5) * h,
+                (Math.random() - 0.5) * d
+            );
+            
+            scene.add(mesh);
+            objectMeshes.push(mesh);
+            objectCount++;
+            updateStats();
+        }
+
+        function clearObjects() {
+            objectMeshes.forEach(mesh => scene.remove(mesh));
+            objectMeshes = [];
+            objectCount = 0;
+            updateStats();
+        }
+
+        // Funciones de exportación/importación (simuladas)
+        function exportDesign() {
+            const design = {
+                habitat: {
+                    shape: document.getElementById('habitatShape').value,
+                    width: parseFloat(document.getElementById('width').value),
+                    height: parseFloat(document.getElementById('height').value),
+                    depth: parseFloat(document.getElementById('depth').value),
+                    multiLevel: multiLevel,
+                    numLevels: parseInt(document.getElementById('numLevels').value)
+                },
+                mission: {
+                    crewSize: parseInt(document.getElementById('crewSize').value),
+                    duration: parseInt(document.getElementById('duration').value),
+                    destination: document.getElementById('destination').value
+                },
+                areas: areas,
+                timestamp: new Date().toISOString()
+            };
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(design, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "habitat_design_" + new Date().getTime() + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            alert('Diseño exportado correctamente');
+        }
+
+        function importDesign() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const design = JSON.parse(event.target.result);
+                        
+                        // Aplicar configuración del hábitat
+                        document.getElementById('habitatShape').value = design.habitat.shape;
+                        document.getElementById('width').value = design.habitat.width;
+                        document.getElementById('height').value = design.habitat.height;
+                        document.getElementById('depth').value = design.habitat.depth;
+                        
+                        multiLevel = design.habitat.multiLevel;
+                        document.getElementById('multiLevelSwitch').classList.toggle('active', multiLevel);
+                        document.getElementById('levelControls').style.display = multiLevel ? 'block' : 'none';
+                        document.getElementById('numLevels').value = design.habitat.numLevels;
+                        
+                        // Aplicar parámetros de misión
+                        document.getElementById('crewSize').value = design.mission.crewSize;
+                        document.getElementById('duration').value = design.mission.duration;
+                        document.getElementById('destination').value = design.mission.destination;
+                        
+                        // Aplicar áreas
+                        areas = design.areas;
+                        
+                        // Actualizar interfaz
+                        updateAreasList();
+                        createHabitat();
+                        updateStats();
+                        updateRecommendations();
+                        
+                        alert('Diseño importado correctamente');
+                    } catch (error) {
+                        alert('Error al importar el diseño: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function takeScreenshot() {
+            renderer.render(scene, camera);
+            const image = renderer.domElement.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'habitat_screenshot_' + new Date().getTime() + '.png';
+            link.href = image;
+            link.click();
+            
+            alert('Captura guardada correctamente');
+        }
+
+        function generateReport() {
+            const { volume, surfaceArea } = calculateVolume();
+            const crewSize = parseInt(document.getElementById('crewSize').value);
+            const duration = parseInt(document.getElementById('duration').value);
+            const destination = document.getElementById('destination').value;
+            const totalAssigned = areas.reduce((sum, area) => sum + area.percentage, 0);
+            
+            let report = `=== REPORTE DE DISEÑO DE HÁBITAT ESPACIAL ===\n\n`;
+            report += `Fecha: ${new Date().toLocaleString()}\n`;
+            report += `Modo: ${currentMode === 'basic' ? 'Estudiante' : 'Profesional'}\n\n`;
+            
+            report += `CONFIGURACIÓN DEL HÁBITAT:\n`;
+            report += `- Forma: ${document.getElementById('habitatShape').value}\n`;
+            report += `- Dimensiones: ${document.getElementById('width').value} x ${document.getElementById('height').value} x ${document.getElementById('depth').value} m\n`;
+            report += `- Volumen total: ${volume.toFixed(1)} m³\n`;
+            report += `- Área de superficie: ${surfaceArea.toFixed(1)} m²\n`;
+            report += `- Múltiples niveles: ${multiLevel ? 'Sí' : 'No'}\n\n`;
+            
+            report += `PARÁMETROS DE MISIÓN:\n`;
+            report += `- Tripulación: ${crewSize} personas\n`;
+            report += `- Duración: ${duration} días\n`;
+            report += `- Destino: ${document.getElementById('destination').options[document.getElementById('destination').selectedIndex].text}\n\n`;
+            
+            report += `DISTRIBUCIÓN DE ÁREAS (${totalAssigned}% asignado):\n`;
+            areas.forEach(area => {
+                report += `- ${areaNames[area.type]}: ${area.percentage}%\n`;
+            });
+            
+            report += `\nESTADÍSTICAS:\n`;
+            report += `- Espacio por tripulante: ${(volume / crewSize).toFixed(1)} m³\n`;
+            report += `- Objetos colocados: ${objectCount}\n`;
+            
+            // Análisis de viabilidad
+            report += `\nANÁLISIS DE VIABILIDAD:\n`;
+            if (totalAssigned >= 80) {
+                report += `- ✅ Distribución óptima\n`;
+            } else if (totalAssigned >= 50) {
+                report += `- ⚠️ Distribución aceptable\n`;
+            } else {
+                report += `- ❌ Distribución insuficiente\n`;
+            }
+            
+            // Mostrar reporte en una ventana emergente
+            const reportWindow = window.open('', '_blank');
+            reportWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Reporte de diseño - Hábitat espacial</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                            pre { background: #f4f4f4; padding: 15px; border-radius: 5px; }
+                            .header { background: #0a0e27; color: white; padding: 15px; border-radius: 5px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h2>🚀 Reporte de diseño - Hábitat espacial NASA:)</h2>
+                        </div>
+                        <pre>${report}</pre>
+                        <button onclick="window.print()">🖨️ Imprimir reporte</button>
+                    </body>
+                </html>
+            `);
+        }
+
+        function updateZoningAnalysis() {
+            const analysisDiv = document.getElementById('zoningAnalysis');
+            
+            if (areas.length === 0) {
+                analysisDiv.innerHTML = '<em>Agrega áreas para ver el análisis de zonificación</em>';
+                return;
+            }
+
+            let analysisHTML = '';
+            
+            // 1. Estado de distribución
+            const totalAssigned = areas.reduce((sum, area) => sum + area.percentage, 0);
+            analysisHTML += `<div style="margin-bottom: 10px;">
+                <strong>Estado de distribución:</strong><br>
+                ${totalAssigned >= 80 ? '✅' : totalAssigned >= 50 ? '⚠️' : '❌'} 
+                ${totalAssigned >= 80 ? 'Óptima' : totalAssigned >= 50 ? 'Aceptable' : 'Insuficiente'} 
+                (${totalAssigned}% del espacio asignado)<br>
+                Espacio no asignado: ${100 - totalAssigned}%
+            </div>`;
+
+            // 2. Compatibilidad de áreas
+            analysisHTML += `<div style="margin-bottom: 10px;">
+                <strong>Compatibilidad de areas:</strong><br>`;
+            
+            let conflicts = [];
+            let compatibilities = [];
+            
+            // Verificar compatibilidades y conflictos
+            for (let i = 0; i < areas.length; i++) {
+                for (let j = i + 1; j < areas.length; j++) {
+                    const area1 = areas[i];
+                    const area2 = areas[j];
+                    const rules1 = zoningRules[area1.type];
+                    const rules2 = zoningRules[area2.type];
+                    
+                    // Verificar si son áreas adyacentes (simulado)
+                    const areAdjacent = Math.random() > 0.5;
+                    
+                    if (areAdjacent) {
+                        if (rules1.avoid.includes(area2.type) || rules2.avoid.includes(area1.type)) {
+                            conflicts.push(`• ❌ ${areaNames[area1.type]} cerca de ${areaNames[area2.type]}`);
+                        }
+                        
+                        if (rules1.adjacent.includes(area2.type) || rules2.adjacent.includes(area1.type)) {
+                            compatibilities.push(`• ✅ ${areaNames[area1.type]} ↔ ${areaNames[area2.type]}`);
+                        }
+                    }
+                }
+            }
+            
+            if (compatibilities.length > 0) {
+                analysisHTML += compatibilities.join('<br>') + '<br>';
+            }
+            
+            if (conflicts.length > 0) {
+                analysisHTML += conflicts.join('<br>');
+            } else {
+                analysisHTML += '• ✅ No se detectaron conflictos de zonificación';
+            }
+            
+            analysisHTML += `</div>`;
+
+            // 3. Niveles de ruido
+            analysisHTML += `<div style="margin-bottom: 10px;">
+                <strong>Niveles de ruido:</strong><br>`;
+            
+            const noiseLevels = {
+                bajo: [],
+                medio: [],
+                alto: []
+            };
+            
+            areas.forEach(area => {
+                const noise = zoningRules[area.type].noise;
+                noiseLevels[noise].push(areaNames[area.type]);
+            });
+            
+            Object.keys(noiseLevels).forEach(level => {
+                if (noiseLevels[level].length > 0) {
+                    analysisHTML += `• Zonas de ${level} ruido: ${noiseLevels[level].join(', ')}<br>`;
+                }
+            });
+            
+            analysisHTML += `</div>`;
+
+            // 4. Recomendaciones
+            analysisHTML += `<div>
+                <strong>Recomendaciones:</strong><br>`;
+            
+            const recommendations = [];
+            
+            if (!areas.some(a => a.type === 'sleep')) {
+                recommendations.push('• Agregar área de Descanso/Sueño');
+            }
+            
+            if (conflicts.length > 0) {
+                recommendations.push('• Reorganizar áreas conflictivas');
+            }
+            
+            if (totalAssigned < 80) {
+                recommendations.push('• Optimizar uso del espacio (objetivo: 80%+)');
+            }
+            
+            if (recommendations.length > 0) {
+                analysisHTML += recommendations.join('<br>');
+            } else {
+                analysisHTML += '• ✅ Distribución cumple con estándares NASA';
+            }
+            
+            analysisHTML += `</div>`;
+
+            analysisDiv.innerHTML = analysisHTML;
+        }
+
+        // Manejo de redimensionamiento de ventana
+        window.addEventListener('resize', () => {
+            camera.aspect = viewport.clientWidth / viewport.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+        });
+    </script>
+</body>
+</html>
